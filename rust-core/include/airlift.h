@@ -98,6 +98,16 @@ int32_t al_exploit_write_dir(const char *pairing_path,
                              void *ctx,
                              char **out_error);
 
+// Remove rendered Wallet cache leaves through the AirTraffic relocation path.
+// `leaves` is a newline-separated list of plain file names.
+// Returns 0 only when all requested leaves were moved and temporary state was cleaned.
+int32_t al_exploit_remove_card_cache(const char *pairing_path,
+                                     const char *target,
+                                     const char *leaves,
+                                     ALLogCallback log_cb,
+                                     void *ctx,
+                                     char **out_error);
+
 // Inject an entire directory `folder_path` into `target_parent_dir/dest_name` on the device.
 // Preserves complete folder hierarchy and all internal assets in one AirTraffic operation.
 // Returns 0 on success, 1 on error (with out_error set).
