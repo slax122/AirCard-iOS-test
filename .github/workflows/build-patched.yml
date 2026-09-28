@@ -5,15 +5,33 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Xcode
+      - name: Select Xcode 16+
         run: |
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          echo "Available Xcode installations:"
+          ls -d /Applications/Xcode*.app
+
+          XCODE_PATH=$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' | while read x; do
+            version=$("$x/Contents/Developer/usr/bin/xcodebuild" -version 2>/dev/null | head -1)
+            case "$version" in
+              "Xcode 16."*|"Xcode 17."*|"Xcode 18."*|"Xcode 19."*)
+                echo "$x"
+                ;;
+            esac
+          done | head -1)
+
+          if [ -z "$XCODE_PATH" ]; then
+            echo "ERROR: No Xcode 16+ installation found."
+            exit 1
+          fi
+
+          echo "Using: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           xcodebuild -version
 
       - name: Install Rust
