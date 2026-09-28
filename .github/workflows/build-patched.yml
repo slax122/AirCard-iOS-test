@@ -1,0 +1,54 @@
+name: Build Patched AirCard-iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+
+      - name: Install dependencies
+        run: |
+          brew install xcodegen
+          chmod +x build-ios.sh build-ipa.sh
+
+      - name: Build AirliftFFI XCFramework
+        run: |
+          ./build-ios.sh
+
+      - name: Build IPA
+        run: |
+          ./build-ipa.sh Release
+
+      - name: Find generated IPA
+        run: |
+          echo "Searching for IPA..."
+          find . -name "*.ipa" -type f -print
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AirCard-iOS-WalletCacheFix
+          path: "**/*.ipa"
+          if-no-files-found: error
+
+      - name: Upload rebuilt XCFramework
+        uses: actions/upload-artifact@v4
+        with:
+          name: AirliftFFI-xcframework-patched
+          path: "**/AirliftFFI.xcframework"
+          if-no-files-found: error
