@@ -11,27 +11,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16+
+      - name: Select Xcode 16.4
         run: |
-          echo "Available Xcode installations:"
-          ls -d /Applications/Xcode*.app
-
-          XCODE_PATH=$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' | while read x; do
-            version=$("$x/Contents/Developer/usr/bin/xcodebuild" -version 2>/dev/null | head -1)
-            case "$version" in
-              "Xcode 16."*|"Xcode 17."*|"Xcode 18."*|"Xcode 19."*)
-                echo "$x"
-                ;;
-            esac
-          done | head -1)
-
-          if [ -z "$XCODE_PATH" ]; then
-            echo "ERROR: No Xcode 16+ installation found."
-            exit 1
-          fi
-
-          echo "Using: $XCODE_PATH"
-          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
           xcodebuild -version
 
       - name: Install Rust
@@ -51,22 +33,3 @@ jobs:
       - name: Build IPA
         run: |
           ./build-ipa.sh Release
-
-      - name: Find generated IPA
-        run: |
-          echo "Searching for IPA..."
-          find . -name "*.ipa" -type f -print
-
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: AirCard-iOS-WalletCacheFix
-          path: "**/*.ipa"
-          if-no-files-found: error
-
-      - name: Upload rebuilt XCFramework
-        uses: actions/upload-artifact@v4
-        with:
-          name: AirliftFFI-xcframework-patched
-          path: "**/AirliftFFI.xcframework"
-          if-no-files-found: error
